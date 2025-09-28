@@ -2,16 +2,19 @@
 #include "glad/glad.h"
 #include "PixelFormat.hpp"
 #include "Logger.hpp"
+#include "Shader.hpp"
 
 LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hdc;
     static HGLRC RenderingContext;
+
     static Logger logger("OPENGL");
 
     switch (msg)
     {
     case WM_CREATE:
+    {
         hdc = GetDC(hWnd);
         setPixelFormat(hdc);
         RenderingContext = wglCreateContext(hdc);
@@ -26,8 +29,10 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             logger.info("OpenGL functions have initialized successfully");
         }
+        Shader shader("./shader/vertex.vert", "./");
 
         break;
+    }
     case WM_CLOSE:
         DestroyWindow(hWnd);
         return 0;
@@ -38,6 +43,4 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     default:
         return DefWindowProc(hWnd, msg, wParam, lParam);
     }
-
-    return DefWindowProc(hWnd, msg, wParam, lParam);
 }

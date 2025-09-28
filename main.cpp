@@ -12,7 +12,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, i
     freopen("CONOUT$", "w", stdout);
     freopen("CONIN$", "r", stdin);
 
-    // Enable ANSI escape codes
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
     GetConsoleMode(hOut, &dwMode);

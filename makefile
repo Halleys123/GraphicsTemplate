@@ -54,7 +54,7 @@ OBJS_C := $(addprefix bin/,$(SRCS_C:.c=.obj))
 OBJS_CPP := $(addprefix bin/,$(SRCS_CPP:.cpp=.obj))
 OBJS := $(OBJS_C) $(OBJS_CPP)
 
-TARGET := build/program.exe
+TARGET := program.exe
 
 # Build rules
 all: $(TARGET)

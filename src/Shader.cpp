@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 Logger Shader::logger = Logger("SHADERS");
-int Shader::ShaderCount = 1;
+int Shader::ShaderCount = 0;
 
 void Shader::initShader()
 {
@@ -12,6 +12,11 @@ void Shader::initShader()
     ShaderProgram = -1;
     ShaderCount += 1;
     ShaderID = ShaderCount;
+
+    char name[32];
+    snprintf(name, sizeof(name), "SHADER::%d", ShaderID);
+
+    logger.setLoggerName(name);
 }
 
 Shader::Shader()
@@ -22,11 +27,7 @@ Shader::Shader()
 Shader::Shader(const char *VertexShaderPath, const char *FragShaderPath)
 {
     initShader();
-
-    SetupFrag(VertexShaderPath);
-    SetupVert(FragShaderPath);
-
-    linkShaderProgram();
+    SetupShader(VertexShaderPath, FragShaderPath);
 }
 
 Shader::~Shader()
@@ -46,6 +47,14 @@ Shader::~Shader()
     deleteShader(FragShaderID);
 }
 
+void Shader::SetupShader(const char *VertexShaderPath, const char *FragShaderPath)
+{
+    SetupVert(VertexShaderPath);
+    SetupFrag(FragShaderPath);
+
+    linkShaderProgram();
+}
+
 void Shader::SetupVert(const char *path)
 {
     char *vertShdSrc = nullptr;
@@ -61,7 +70,6 @@ void Shader::SetupFrag(const char *path)
     unsigned int fragLen = 0;
 
     loadFromFile(&fragShdSrc, fragLen, path);
-
     compileShader(fragShdSrc, GL_FRAGMENT_SHADER);
     free(fragShdSrc);
 }
@@ -121,6 +129,7 @@ void Shader::compileShader(char *shaderSrc, GLenum ShaderType)
         int len = 0;
         char errStr[500];
         glGetShaderInfoLog(*shaderId, 500, &len, errStr);
+        errStr[len] = '\0';
         logger.error(errStr);
         *shaderId = -1;
     }
@@ -161,7 +170,10 @@ void Shader::linkShaderProgram()
         glGetProgramInfoLog(ShaderProgram, 500, &len, error);
         error[len] = '\0';
         logger.error(error);
+        ShaderProgram = -1;
     }
+    else
+        logger.success("Shader program linked successfully");
 }
 
 void Shader::useProgram()

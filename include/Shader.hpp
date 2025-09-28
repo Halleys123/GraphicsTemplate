@@ -27,6 +27,7 @@ public:
 
     void SetupVert(const char *);
     void SetupFrag(const char *);
+    void SetupShader(const char *VertexShaderPath, const char *FragShaderPath);
 
     void useProgram();
 };

@@ -52,6 +52,7 @@ const char *Logger::BLINK = "\x1b[5m";
 
 Logger::Logger() : currentLevel(LOG_INFO), loggerName("DEFAULT"), loggerId(nextLoggerId++)
 {
+
     loggerColor = generateColorFromId(loggerId);
 }
 

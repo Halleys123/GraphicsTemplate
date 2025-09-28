@@ -10,6 +10,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static HGLRC RenderingContext;
 
     static Logger logger("OPENGL");
+    static Shader *shader = nullptr;
 
     switch (msg)
     {
@@ -29,7 +30,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             logger.info("OpenGL functions have initialized successfully");
         }
-        Shader shader("./shader/vertex.vert", "./shader/fragment.frag");
+
+        shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
 
         break;
     }
@@ -38,6 +40,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         return 0;
     case WM_DESTROY:
         wglDeleteContext(RenderingContext);
+        (*shader).~Shader();
+        delete shader;
         PostQuitMessage(0);
         return 0;
     default:

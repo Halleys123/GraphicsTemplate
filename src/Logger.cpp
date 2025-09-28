@@ -9,6 +9,7 @@
 int Logger::nextLoggerId = 1;
 int Logger::maxNameLen = 1;
 
+// Foreground colors
 const char *Logger::RED = "\x1b[38;2;255;99;99m";
 const char *Logger::BLUE = "\x1b[38;2;99;150;255m";
 const char *Logger::GREEN = "\x1b[38;2;120;255;120m";
@@ -19,9 +20,35 @@ const char *Logger::ORANGE = "\x1b[38;2;255;165;99m";
 const char *Logger::GRAY = "\x1b[38;2;170;170;170m";
 const char *Logger::WHITE = "\x1b[38;2;255;255;255m";
 const char *Logger::SUCCESS_GREEN = "\x1b[38;2;50;200;50m";
+const char *Logger::BRIGHT_RED = "\x1b[38;2;255;85;85m";
+const char *Logger::BRIGHT_GREEN = "\x1b[38;2;85;255;85m";
+const char *Logger::BRIGHT_BLUE = "\x1b[38;2;85;170;255m";
+const char *Logger::BRIGHT_YELLOW = "\x1b[38;2;255;255;85m";
+const char *Logger::BRIGHT_CYAN = "\x1b[38;2;85;255;255m";
+const char *Logger::BRIGHT_MAGENTA = "\x1b[38;2;255;85;255m";
+const char *Logger::BRIGHT_WHITE = "\x1b[38;2;255;255;255m";
+const char *Logger::DARK_GRAY = "\x1b[38;2;100;100;100m";
+const char *Logger::LIGHT_GRAY = "\x1b[38;2;200;200;200m";
+
+// Background colors
+const char *Logger::BG_RED = "\x1b[48;2;120;30;30m";
+const char *Logger::BG_GREEN = "\x1b[48;2;30;120;30m";
+const char *Logger::BG_BLUE = "\x1b[48;2;30;60;120m";
+const char *Logger::BG_YELLOW = "\x1b[48;2;120;100;20m";
+const char *Logger::BG_PURPLE = "\x1b[48;2;80;40;120m";
+const char *Logger::BG_CYAN = "\x1b[48;2;20;100;120m";
+const char *Logger::BG_GRAY = "\x1b[48;2;60;60;60m";
+const char *Logger::BG_DARK_GRAY = "\x1b[48;2;40;40;40m";
+const char *Logger::BG_BRIGHT_RED = "\x1b[48;2;180;40;40m";
+const char *Logger::BG_BRIGHT_GREEN = "\x1b[48;2;40;180;40m";
+
+// Text styles
 const char *Logger::RESET = "\x1b[0m";
-const char *Logger::BG_RED = "\x1b[48;2;80;20;20m";
 const char *Logger::BOLD = "\x1b[1m";
+const char *Logger::ITALIC = "\x1b[3m";
+const char *Logger::UNDERLINE = "\x1b[4m";
+const char *Logger::DIM = "\x1b[2m";
+const char *Logger::BLINK = "\x1b[5m";
 
 Logger::Logger() : currentLevel(LOG_INFO), loggerName("DEFAULT"), loggerId(nextLoggerId++)
 {
@@ -144,11 +171,12 @@ void Logger::silly(const char *format, ...) const
     if (currentLevel <= LOG_SILLY)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %sSILLY%s   ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               CYAN, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s SILLY %s  ",
+               DIM, DARK_GRAY, timestamp.c_str(), RESET,
+               loggerColor.c_str(), ITALIC, getPaddedLoggerName().c_str(), RESET,
+               BG_DARK_GRAY, BRIGHT_CYAN, BOLD, RESET);
 
+        printf("%s%s", CYAN, DIM);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -162,11 +190,12 @@ void Logger::debug(const char *format, ...) const
     if (currentLevel <= LOG_DEBUG)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %sDEBUG%s   ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               PURPLE, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s DEBUG %s ",
+               DIM, LIGHT_GRAY, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_PURPLE, BRIGHT_WHITE, BOLD, RESET);
 
+        printf("%s", BRIGHT_MAGENTA);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -180,11 +209,12 @@ void Logger::verbose(const char *format, ...) const
     if (currentLevel <= LOG_VERBOSE)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %sVERBOSE%s ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               BLUE, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%sVERBOSE%s ",
+               DIM, GRAY, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_BLUE, BRIGHT_WHITE, BOLD, RESET);
 
+        printf("%s%s", BRIGHT_BLUE, ITALIC);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -198,11 +228,12 @@ void Logger::info(const char *format, ...) const
     if (currentLevel <= LOG_INFO)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %sINFO%s    ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               WHITE, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s INFO  %s ",
+               LIGHT_GRAY, BOLD, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_GRAY, BRIGHT_WHITE, BOLD, RESET);
 
+        printf("%s", BRIGHT_WHITE);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -216,12 +247,12 @@ void Logger::warn(const char *format, ...) const
     if (currentLevel <= LOG_WARN)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %s%sWARN%s    ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               YELLOW, BOLD, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s%s WARN  %s ",
+               YELLOW, BOLD, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_YELLOW, BOLD, UNDERLINE, BRIGHT_WHITE, RESET);
 
-        printf("%s", YELLOW);
+        printf("%s%s%s", BRIGHT_YELLOW, BOLD, ITALIC);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -235,12 +266,12 @@ void Logger::error(const char *format, ...) const
     if (currentLevel <= LOG_ERROR)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %s%sERROR%s   ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               RED, BOLD, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s%s ERROR %s ",
+               RED, BOLD, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_RED, BRIGHT_WHITE, BOLD, UNDERLINE, RESET);
 
-        printf("%s", RED);
+        printf("%s%s", BRIGHT_RED, BOLD);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -254,12 +285,12 @@ void Logger::fatal(const char *format, ...) const
     if (currentLevel <= LOG_FATAL)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %s%s%sFATAL%s   ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               BG_RED, WHITE, BOLD, RESET);
+        printf("%s%s%s[%s]%s %s%s%s[%s]%s %s%s%s%s%s FATAL %s ",
+               BG_BRIGHT_RED, BRIGHT_WHITE, BOLD, timestamp.c_str(), RESET,
+               BG_BRIGHT_RED, loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_BRIGHT_RED, BRIGHT_WHITE, BOLD, UNDERLINE, BLINK, RESET);
 
-        printf("%s%s", RED, BOLD);
+        printf("%s%s%s%s", BG_BRIGHT_RED, BRIGHT_WHITE, BOLD, BLINK);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -273,12 +304,12 @@ void Logger::success(const char *format, ...) const
     if (currentLevel <= LOG_SUCCESS)
     {
         std::string timestamp = getCurrentTimestamp();
-        printf("%s[%s] %s[%s]%s %s%sSUCCESS%s ",
-               GRAY, timestamp.c_str(),
-               loggerColor.c_str(), getPaddedLoggerName(), RESET,
-               SUCCESS_GREEN, BOLD, RESET);
+        printf("%s%s[%s]%s %s%s[%s]%s %s%s%s%sSUCCESS%s ",
+               BRIGHT_GREEN, BOLD, timestamp.c_str(), RESET,
+               loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+               BG_BRIGHT_GREEN, BRIGHT_WHITE, BOLD, UNDERLINE, RESET);
 
-        printf("%s", SUCCESS_GREEN);
+        printf("%s%s", BRIGHT_GREEN, BOLD);
         va_list args;
         va_start(args, format);
         vprintf(format, args);
@@ -290,11 +321,12 @@ void Logger::success(const char *format, ...) const
 void Logger::log(const char *format, ...) const
 {
     std::string timestamp = getCurrentTimestamp();
-    printf("%s[%s] %s[%s]%s %sLOG%s     ",
-           GRAY, timestamp.c_str(),
-           loggerColor.c_str(), getPaddedLoggerName(), RESET,
-           GREEN, RESET);
+    printf("%s%s[%s]%s %s%s[%s]%s %s%s%s LOG   %s ",
+           LIGHT_GRAY, ITALIC, timestamp.c_str(), RESET,
+           loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
+           BG_GREEN, BRIGHT_WHITE, BOLD, RESET);
 
+    printf("%s%s", BRIGHT_GREEN, ITALIC);
     va_list args;
     va_start(args, format);
     vprintf(format, args);

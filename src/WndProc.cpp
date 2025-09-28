@@ -29,7 +29,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             logger.info("OpenGL functions have initialized successfully");
         }
-        Shader shader("./shader/vertex.vert", "./");
+        Shader shader("./shader/vertex.vert", "./shader/fragment.frag");
 
         break;
     }

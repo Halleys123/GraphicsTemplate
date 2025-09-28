@@ -20,6 +20,7 @@ private:
     static int maxNameLen;
     static int nextLoggerId;
 
+    // Foreground colors
     static const char *RED;
     static const char *BLUE;
     static const char *GREEN;
@@ -30,9 +31,35 @@ private:
     static const char *GRAY;
     static const char *WHITE;
     static const char *SUCCESS_GREEN;
-    static const char *RESET;
+    static const char *BRIGHT_RED;
+    static const char *BRIGHT_GREEN;
+    static const char *BRIGHT_BLUE;
+    static const char *BRIGHT_YELLOW;
+    static const char *BRIGHT_CYAN;
+    static const char *BRIGHT_MAGENTA;
+    static const char *BRIGHT_WHITE;
+    static const char *DARK_GRAY;
+    static const char *LIGHT_GRAY;
+
+    // Background colors
     static const char *BG_RED;
+    static const char *BG_GREEN;
+    static const char *BG_BLUE;
+    static const char *BG_YELLOW;
+    static const char *BG_PURPLE;
+    static const char *BG_CYAN;
+    static const char *BG_GRAY;
+    static const char *BG_DARK_GRAY;
+    static const char *BG_BRIGHT_RED;
+    static const char *BG_BRIGHT_GREEN;
+
+    // Text styles
+    static const char *RESET;
     static const char *BOLD;
+    static const char *ITALIC;
+    static const char *UNDERLINE;
+    static const char *DIM;
+    static const char *BLINK;
 
     LogLevel currentLevel;
     std::string loggerName;

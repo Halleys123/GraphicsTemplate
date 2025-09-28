@@ -6,20 +6,27 @@
 class Shader
 {
 private:
+    int ShaderID;
     GLuint VertShaderID, FragShaderID, ShaderProgram;
     static Logger logger;
-
-    bool initFrag = false;
-    bool initVert = false;
+    static int ShaderCount;
 
 private:
+    // Used for initiation of id, shadercount increasing, assigning id to this object.
+    void initShader();
+    void deleteShader(GLuint Shader);
+
     void loadFromFile(char **shaderSrc, unsigned int &shaderLen, const char *path);
     void compileShader(char *shaderSrc, GLenum ShaderType);
+    void linkShaderProgram();
 
 public:
     Shader();
+    ~Shader();
     Shader(const char *VertexShaderPath, const char *FragShaderPath);
 
     void SetupVert(const char *, GLenum);
     void SetupFrag(const char *, GLenum);
+
+    void useProgram();
 };

@@ -25,8 +25,8 @@ public:
     ~Shader();
     Shader(const char *VertexShaderPath, const char *FragShaderPath);
 
-    void SetupVert(const char *, GLenum);
-    void SetupFrag(const char *, GLenum);
+    void SetupVert(const char *);
+    void SetupFrag(const char *);
 
     void useProgram();
 };

@@ -39,18 +39,29 @@ Shader::Shader(const char *VertexShaderPath, const char *FragShaderPath)
 {
     initShader();
 
-    char *vertShdSrc = nullptr, *fragShdSrc = nullptr;
-    unsigned int vertLen = 0, fragLen = 0;
-
-    loadFromFile(&vertShdSrc, vertLen, VertexShaderPath);
-    loadFromFile(&fragShdSrc, fragLen, FragShaderPath);
-
-    compileShader(vertShdSrc, GL_VERTEX_SHADER);
-    compileShader(fragShdSrc, GL_FRAGMENT_SHADER);
+    SetupFrag();
+    SetupVert();
 
     linkShaderProgram();
+}
 
+void Shader::SetupVert(const char *path)
+{
+    char *vertShdSrc = nullptr;
+    unsigned int vertLen = 0;
+
+    loadFromFile(&vertShdSrc, vertLen, path);
+    compileShader(vertShdSrc, GL_VERTEX_SHADER);
     free(vertShdSrc);
+}
+void Shader::SetupFrag(const char *path)
+{
+    char *fragShdSrc = nullptr;
+    unsigned int fragLen = 0;
+
+    loadFromFile(&fragShdSrc, fragLen, path);
+
+    compileShader(fragShdSrc, GL_FRAGMENT_SHADER);
     free(fragShdSrc);
 }
 
@@ -154,6 +165,12 @@ void Shader::linkShaderProgram()
 
 void Shader::useProgram()
 {
+    if (ShaderProgram == -1)
+    {
+        logger.error("Initialize and link the shader program before using.");
+        return;
+    }
+
     glUseProgram(ShaderProgram);
 }
 

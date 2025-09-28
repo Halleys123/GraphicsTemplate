@@ -18,6 +18,17 @@ Shader::Shader()
 {
     initShader();
 }
+
+Shader::Shader(const char *VertexShaderPath, const char *FragShaderPath)
+{
+    initShader();
+
+    SetupFrag(VertexShaderPath);
+    SetupVert(FragShaderPath);
+
+    linkShaderProgram();
+}
+
 Shader::~Shader()
 {
     logger.warn("Now in the process of deleting Shader Object %d", ShaderID);
@@ -33,16 +44,6 @@ Shader::~Shader()
 
     deleteShader(VertShaderID);
     deleteShader(FragShaderID);
-}
-
-Shader::Shader(const char *VertexShaderPath, const char *FragShaderPath)
-{
-    initShader();
-
-    SetupFrag();
-    SetupVert();
-
-    linkShaderProgram();
 }
 
 void Shader::SetupVert(const char *path)
@@ -63,6 +64,35 @@ void Shader::SetupFrag(const char *path)
 
     compileShader(fragShdSrc, GL_FRAGMENT_SHADER);
     free(fragShdSrc);
+}
+
+void Shader::loadFromFile(char **shaderSrc, unsigned int &fileLength, const char *path)
+{
+    if (!path)
+    {
+        Shader::logger.error("Shader path not provided, Unable to compile shader");
+        return;
+    }
+    FILE *file = fopen(path, "r");
+
+    if (!file)
+    {
+        Shader::logger.error("No shader source file found at path: %s", path);
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+    Shader::logger.success("Shader Source file loaded successfully: %s", path);
+    fileLength = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    *shaderSrc = (char *)malloc((fileLength + 1) * sizeof(char));
+    fread(*shaderSrc, 1, fileLength, file);
+    (*shaderSrc)[fileLength] = '\0';
+
+    Shader::logger.silly("\n%s", *shaderSrc);
+
+    fclose(file);
 }
 
 void Shader::compileShader(char *shaderSrc, GLenum ShaderType)
@@ -100,35 +130,6 @@ void Shader::compileShader(char *shaderSrc, GLenum ShaderType)
     }
 
     // ! Do not free or delete shaderId as it is a pointer and not a memory allocated with malloc or calloc
-}
-
-void Shader::loadFromFile(char **shaderSrc, unsigned int &fileLength, const char *path)
-{
-    if (!path)
-    {
-        Shader::logger.error("Shader path not provided, Unable to compile shader");
-        return;
-    }
-    FILE *file = fopen(path, "r");
-
-    if (!file)
-    {
-        Shader::logger.error("No shader source file found at path: %s", path);
-        return;
-    }
-
-    fseek(file, 0, SEEK_END);
-    Shader::logger.success("Shader Source file loaded successfully: %s", path);
-    fileLength = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    *shaderSrc = (char *)malloc((fileLength + 1) * sizeof(char));
-    fread(*shaderSrc, 1, fileLength, file);
-    (*shaderSrc)[fileLength] = '\0';
-
-    Shader::logger.silly("\n%s", *shaderSrc);
-
-    fclose(file);
 }
 
 void Shader::linkShaderProgram()

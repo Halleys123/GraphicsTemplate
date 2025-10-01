@@ -8,6 +8,7 @@
 
 int Logger::nextLoggerId = 1;
 int Logger::maxNameLen = 1;
+bool Logger::globalDisable = false;
 
 // Foreground colors
 const char *Logger::RED = "\x1b[38;2;255;99;99m";
@@ -52,12 +53,13 @@ const char *Logger::BLINK = "\x1b[5m";
 
 Logger::Logger() : currentLevel(LOG_INFO), loggerName("DEFAULT"), loggerId(nextLoggerId++)
 {
-
+    disabled = globalDisable;
     loggerColor = generateColorFromId(loggerId);
 }
 
 Logger::Logger(const std::string &name) : currentLevel(LOG_INFO), loggerName(name), loggerId(nextLoggerId++)
 {
+    disabled = globalDisable;
     loggerColor = generateColorFromId(loggerId);
     setLoggerName(name);
 }
@@ -169,6 +171,8 @@ int Logger::getLoggerId() const
 
 void Logger::silly(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_SILLY)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -188,6 +192,8 @@ void Logger::silly(const char *format, ...) const
 
 void Logger::debug(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_DEBUG)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -207,6 +213,8 @@ void Logger::debug(const char *format, ...) const
 
 void Logger::verbose(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_VERBOSE)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -226,6 +234,8 @@ void Logger::verbose(const char *format, ...) const
 
 void Logger::info(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_INFO)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -245,6 +255,8 @@ void Logger::info(const char *format, ...) const
 
 void Logger::warn(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_WARN)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -264,6 +276,8 @@ void Logger::warn(const char *format, ...) const
 
 void Logger::error(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_ERROR)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -283,6 +297,8 @@ void Logger::error(const char *format, ...) const
 
 void Logger::fatal(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_FATAL)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -302,6 +318,8 @@ void Logger::fatal(const char *format, ...) const
 
 void Logger::success(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     if (currentLevel <= LOG_SUCCESS)
     {
         std::string timestamp = getCurrentTimestamp();
@@ -321,13 +339,15 @@ void Logger::success(const char *format, ...) const
 
 void Logger::log(const char *format, ...) const
 {
+    if (this->disabled)
+        return;
     std::string timestamp = getCurrentTimestamp();
     printf("%s%s[%s]%s %s%s[%s]%s %s%s%s LOG   %s ",
            LIGHT_GRAY, ITALIC, timestamp.c_str(), RESET,
            loggerColor.c_str(), BOLD, getPaddedLoggerName().c_str(), RESET,
-           BG_GREEN, BRIGHT_WHITE, BOLD, RESET);
+           BG_PURPLE, BRIGHT_WHITE, BOLD, RESET);
 
-    printf("%s%s", BRIGHT_GREEN, ITALIC);
+    printf("%s%s", PURPLE, ITALIC);
     va_list args;
     va_start(args, format);
     vprintf(format, args);
@@ -336,3 +356,8 @@ void Logger::log(const char *format, ...) const
 }
 
 Logger::~Logger() {}
+
+void Logger::setDisable(bool newStatus)
+{
+    this->disabled = !this->globalDisable && newStatus;
+}

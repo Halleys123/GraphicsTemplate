@@ -46,8 +46,26 @@ SUBSYSTEM ?= WINDOWS
 LDFLAGS := /SUBSYSTEM:$(SUBSYSTEM)
 
 # Source files and build targets
-SRCS_C := $(wildcard *.c) $(wildcard src/*.c)
-SRCS_CPP := $(wildcard *.cpp) $(wildcard src/*.cpp)
+# Recursive wildcard function: $(call rwildcard, <dir>, <pattern>)
+# This will traverse all subdirectories under the given dir and collect files
+rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)) $(filter $(subst *,%,$2),$(wildcard $1$2))
+
+# ---------------------------------------------------------------------------
+# Recursive include directory discovery
+# Collect every subdirectory under include/ so headers can be included without
+# specifying their relative path (e.g. "#include \"Vertex.hpp\"") even when
+# the file actually lives in include/Renderable/Vertex.hpp.
+# Pattern '*/' with rwildcard returns all nested directories.
+INCLUDE_SUBDIRS_RAW := $(call rwildcard,include/,*/)
+# Remove trailing slashes for consistency
+INCLUDE_SUBDIRS := $(patsubst %/,%,$(INCLUDE_SUBDIRS_RAW))
+# Generate /I flags for cl (avoid duplicates via sort)
+INCLUDE_FLAGS := $(foreach d,$(sort $(INCLUDE_SUBDIRS)),/I"$(d)") /I"include"
+# ---------------------------------------------------------------------------
+
+# Collect C / C++ sources in project root and recursively under src/
+SRCS_C := $(wildcard *.c) $(call rwildcard,src/,*.c)
+SRCS_CPP := $(wildcard *.cpp) $(call rwildcard,src/,*.cpp)
 SRCS := $(SRCS_C) $(SRCS_CPP)
 
 OBJS_C := $(addprefix bin/,$(SRCS_C:.c=.obj))
@@ -65,11 +83,11 @@ $(TARGET): $(OBJS)
 
 bin/%.obj: %.c
 	@if not exist "$(dir $@)" mkdir "$(dir $@)"
-	set "INCLUDE=$(INCLUDE_PATHS)" && $(CC) $(CFLAGS) /c $< /Fo:$@
+	set "INCLUDE=$(INCLUDE_PATHS)" && $(CC) $(CFLAGS) $(INCLUDE_FLAGS) /c $< /Fo:$@
 
 bin/%.obj: %.cpp
 	@if not exist "$(dir $@)" mkdir "$(dir $@)"
-	set "INCLUDE=$(INCLUDE_PATHS)" && $(CXX) $(CXXFLAGS) /c $< /Fo:$@
+	set "INCLUDE=$(INCLUDE_PATHS)" && $(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) /c $< /Fo:$@
 
 # Run the program
 run: all

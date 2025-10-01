@@ -20,6 +20,8 @@ private:
     void compileShader(char *shaderSrc, GLenum ShaderType);
     void linkShaderProgram();
 
+    void changeLoggerName();
+
 public:
     Shader();
     ~Shader();

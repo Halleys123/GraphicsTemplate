@@ -61,6 +61,9 @@ private:
     static const char *DIM;
     static const char *BLINK;
 
+    static bool globalDisable;
+    bool disabled = false;
+
     LogLevel currentLevel;
     std::string loggerName;
     int loggerId;
@@ -91,4 +94,6 @@ public:
     void fatal(const char *format, ...) const;
     void success(const char *format, ...) const;
     void log(const char *format, ...) const;
+
+    void setDisable(bool newStatus);
 };

@@ -2,3 +2,4 @@ build
 bin
 *.pdf
 *.exe
+*.pdb

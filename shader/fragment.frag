@@ -5,8 +5,9 @@ in vec2 UV;
 in vec3 Normal;
 
 out vec4 color;
+uniform sampler2D textureSampler;
 
 void main()
 {
-    color = VertColor;
+    color = texture2D(textureSampler, UV);
 }

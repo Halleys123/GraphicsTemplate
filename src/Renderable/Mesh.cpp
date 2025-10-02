@@ -165,8 +165,8 @@ void Mesh::setupUV(UV *uvs, int uvCount)
     glBufferData(GL_ARRAY_BUFFER, sizeof(UV) * this->uvCount, this->uvs, GL_STATIC_DRAW);
 
     // 2 components per UV: u, v
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(UV), (void *)0);
-    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(UV), (void *)0);
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

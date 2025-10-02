@@ -5,6 +5,7 @@
 #include "Shader.hpp"
 #include "Mesh.hpp"
 #include "Vertex.hpp"
+#include "Texture.hpp"
 
 LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -14,6 +15,9 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static Logger logger("OPENGL");
     static Shader *shader = nullptr;
     static Mesh *mesh = nullptr;
+    static Texture *texture;
+
+    static int glSamplerLocation;
 
     GLint indices[] = {0, 1, 2, 1, 2, 3};
     Color colors[] = {
@@ -27,6 +31,12 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {0.5f, 0.5f, 0.0f},   // Top-right
         {-0.5f, -0.5f, 0.0f}, // Bottom-left
         {0.5f, -0.5f, 0.0f}   // Bottom-right
+    };
+    UV uv[] = {
+        {0.0f, 1.0f}, // Top-left
+        {1.0f, 1.0f}, // Top-right
+        {0.0f, 0.0f}, // Bottom-left
+        {1.0f, 0.0f}  // Bottom-right
     };
 
     switch (msg)
@@ -54,10 +64,17 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 
+        texture = new Texture("./texture/wood.jpg");
+
         mesh = new Mesh(pointer, 4, indices, 6);
         mesh->setupColors(colors, 4);
-        shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
+        mesh->setupUV(uv, 4);
 
+        shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
+        shader->useProgram();
+        glSamplerLocation = glGetUniformLocation(shader->ShaderProgram, "textureSampler");
+        glUniform1i(glSamplerLocation, 0);
+        texture->Bind();
         break;
     }
     case WM_PAINT:

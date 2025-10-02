@@ -6,105 +6,16 @@
 int Mesh::MeshCount = 0;
 Logger Mesh::logger = Logger();
 
-Mesh::Mesh(Vertex *vertexSrc, int vertexCount, GLuint *indexSrc, int indexCount) : vertexCount(vertexCount), indexCount(indexCount)
+Mesh::Mesh(Position *vertCoords, int vertexCount, GLint *indices, int indexCount)
 {
     glGenVertexArrays(1, &VAO);
 
     MeshID = ++MeshCount;
     changeLoggerName();
 
-    if (vertexCount && vertexSrc)
-        setupVertex(vertexSrc, vertexCount);
+    glGenVertexArrays(1, &VAO);
 
-    if (indexCount && indexSrc)
-        setupIndices(indexSrc, indexCount);
-}
-
-void Mesh::setupVertex(Vertex *vertexSrc, int vertexCount)
-{
-    if (vertexCount <= 0 || !vertexSrc)
-    {
-        logger.error("Either vertex size or vertex pointer is not provided, skipping vertices");
-        return;
-    }
-    if (VBO == 0)
-        glGenBuffers(1, &VBO);
-
-    logger.info("Allocating memory to vertices");
-    vertices = (Vertex *)malloc(sizeof(Vertex) * vertexCount);
-    if (!vertices)
-    {
-        logger.error("Memory allocation failed for vertices.");
-        return;
-    }
-
-    logger.info("Vertices initialized with size of %d", vertexCount);
-    memcpy(vertices, vertexSrc, sizeof(Vertex) * vertexCount);
-    logger.success("Mesh data copied to vertices");
-
-    // Send data to GPU
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertexCount, vertexSrc, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        char infoLog[512];
-        GLsizei length = 0;
-        // Try to get more info from OpenGL (if available)
-        glGetProgramInfoLog(VBO, sizeof(infoLog), &length, infoLog);
-        if (length > 0)
-        {
-            logger.error("OpenGL error %d during vertex setup: %s", err, infoLog);
-        }
-        else
-        {
-            logger.error("OpenGL error occurred during vertex setup: %d", err);
-        }
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-void Mesh::setupIndices(GLuint *indexSrc, int indexCount)
-{
-    if (!indexCount || !indexSrc)
-    {
-        logger.log("Either Index size or index pointer is not provided, skipping indices");
-        return;
-    }
-
-    if (EBO == -1)
-        glGenBuffers(1, &EBO);
-
-    logger.info("Allocating memory to indices");
-    indices = (GLuint *)malloc(sizeof(GLuint) * indexCount);
-    if (!indices)
-    {
-        logger.error("Memory allocation failed for indices.");
-        return;
-    }
-
-    logger.info("Indices initialized with size of %d", indexCount);
-    memcpy(indices, indexSrc, sizeof(GLuint) * indexCount);
-    logger.success("Index data copied to indices");
-
-    // Send data to GPu
-    glBindVertexArray(EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount, indexSrc, GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
+    setupPositions(vertCoords, vertexCount, indices, indexCount);
 }
 
 void Mesh::changeLoggerName()
@@ -117,18 +28,134 @@ void Mesh::changeLoggerName()
 
 Mesh::~Mesh()
 {
-    free(vertices);
-    free(indices);
+    if (normals)
+        free(normals);
+    if (uvs)
+        free(uvs);
+    if (vertCoords)
+        free(vertCoords);
+    if (colors)
+        free(colors);
+}
+
+void Mesh::setupPositions(Position *vertCoords, int vertexCount, GLint *indices, int indexCount)
+{
+    if (this->vertCoords)
+        free(this->vertCoords);
+
+    if (this->indices)
+        free(this->indices);
+
+    if (!vertCoords || vertexCount <= 0)
+    {
+        logger.error("At least vertex coordinates are required to be provided");
+        if (vertCoords && vertexCount <= 0)
+            logger.error("Please provide the count of coordinates");
+        if (!vertCoords && vertexCount)
+            logger.error("Pointer to coordinates is empty");
+
+        return;
+    }
+
+    this->vertexCount = vertexCount;
+    this->indexCount = indexCount;
+
+    // Copy vertCoords to memory;
+    logger.info("Copying vertex to memory");
+    this->vertCoords = (Position *)malloc(sizeof(Position) * this->vertexCount);
+    memcpy(this->vertCoords, vertCoords, sizeof(Position) * this->vertexCount);
+
+    // Add those to VBO
+    // Activate VAO
+    glBindVertexArray(VAO);
+
+    logger.info("GPU Transfer started");
+    glGenBuffers(1, &VBO[VBO_INDEX::POSITION]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[VBO_INDEX::POSITION]);
+    glBufferData(GL_ARRAY_BUFFER, this->vertexCount * sizeof(Position), this->vertCoords, GL_STATIC_DRAW);
+
+    // ! Providing size of three always is wastefull as coords can be two dimensional also.s
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Position), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    if (glGetError() != GL_NO_ERROR)
+        logger.error("OpenGL error after buffer setup");
+
+    if (!indices || indexCount <= 0)
+    {
+        logger.info("Index Count or Indices not provided using array buffer mode");
+
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return;
+    }
+
+    this->logger.info("Using Element buffer mode as indices and indexCount are provided");
+
+    this->indices = (GLint *)malloc(sizeof(GLint) * this->indexCount);
+    memcpy(this->indices, indices, this->indexCount * sizeof(GLint));
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indexCount * sizeof(GLint), indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    return;
+}
+
+void Mesh::setupColors(Color *colors, int colorCount)
+{
+    if (!colors || colorCount <= 0)
+    {
+        logger.error("Either color pointer or color count is zero");
+        return;
+    }
+
+    this->colorCount = colorCount;
+    this->colors = (Color *)malloc(sizeof(Color) * this->colorCount);
+
+    if (!this->colors)
+    {
+        logger.fatal("Colors array allocation failed");
+        return;
+    }
+
+    // Copy the input colors to our allocated memory
+    memcpy(this->colors, colors, sizeof(Color) * this->colorCount);
+
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO[VBO_INDEX::COLOR]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[VBO_INDEX::COLOR]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Color) * this->colorCount, this->colors, GL_STATIC_DRAW);
+
+    // 4 components per color: r, g, b, a
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Color), (void *)0);
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Mesh::draw()
 {
-    if (vertexCount == 0)
+    if (this->vertexCount <= 0)
+    {
+        logger.error("Vertex Coordinates not found");
         return;
+    }
+
     glBindVertexArray(VAO);
-    if (indexCount > 0)
+
+    if (this->indexCount > 0 && indices)
+    {
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+    }
     else
+    {
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    }
+
     glBindVertexArray(0);
 }

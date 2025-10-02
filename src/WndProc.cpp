@@ -15,8 +15,19 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static Shader *shader = nullptr;
     static Mesh *mesh = nullptr;
 
-    GLuint *indices = nullptr;
-    Vertex pointer[] = {Vertex(0.0f, 0.5f, 0.0f, 1.0f, 0.2f, 0.3f, 1.0f), Vertex(-0.5f, -.37f, 0.0f, 0.2f, 0.3f, 1.0f, 1.0f), Vertex(0.5f, -.37f, 0.0f, 0.23f, 0.65f, 0.12f, 1.0f)};
+    GLint indices[] = {0, 1, 2, 1, 2, 3};
+    Color colors[] = {
+        {1.0f, 0.5f, 0.12f, 1.0f}, // Top-left
+        {0.2f, 0.8f, 0.3f, 1.0f},  // Top-right
+        {0.3f, 0.4f, 0.9f, 1.0f},  // Bottom-left
+        {0.9f, 0.1f, 0.5f, 1.0f}   // Bottom-right
+    };
+    Position pointer[] = {
+        {-0.5f, 0.5f, 0.0f},  // Top-left
+        {0.5f, 0.5f, 0.0f},   // Top-right
+        {-0.5f, -0.5f, 0.0f}, // Bottom-left
+        {0.5f, -0.5f, 0.0f}   // Bottom-right
+    };
 
     switch (msg)
     {
@@ -41,8 +52,12 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         GetClientRect(hWnd, &rc);
         glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
 
-        mesh = new Mesh(pointer, 3, indices, 0);
+        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+
+        mesh = new Mesh(pointer, 4, indices, 6);
+        mesh->setupColors(colors, 4);
         shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
+
         break;
     }
     case WM_PAINT:

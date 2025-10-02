@@ -138,6 +138,40 @@ void Mesh::setupColors(Color *colors, int colorCount)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void Mesh::setupUV(UV *uvs, int uvCount)
+{
+    if (!uvs || uvCount <= 0)
+    {
+        logger.error("Either color pointer or color count is zero");
+        return;
+    }
+
+    this->uvCount = uvCount;
+    this->uvs = (UV *)malloc(sizeof(UV) * this->uvCount);
+
+    if (!this->uvs)
+    {
+        logger.fatal("UVs array allocation failed");
+        return;
+    }
+
+    // Copy the input UVs to our allocated memory
+    memcpy(this->uvs, uvs, sizeof(UV) * this->uvCount);
+
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO[VBO_INDEX::UV_I]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[VBO_INDEX::UV_I]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(UV) * this->uvCount, this->uvs, GL_STATIC_DRAW);
+
+    // 2 components per UV: u, v
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(UV), (void *)0);
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void Mesh::draw()
 {
     if (this->vertexCount <= 0)

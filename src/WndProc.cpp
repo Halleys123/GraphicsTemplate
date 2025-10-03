@@ -7,6 +7,9 @@
 #include "Vertex.hpp"
 #include "Texture.hpp"
 
+#define TIMER_ID 1
+#define FRAME_INTERVAL_MS 10 // ~60 FPS
+
 LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hdc;
@@ -18,25 +21,56 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static Texture *texture;
 
     static int glSamplerLocation;
+    static float time = 0.0f;
 
-    GLint indices[] = {0, 1, 2, 1, 2, 3};
+    // Cube with 8 vertices and 36 indices (6 faces * 2 triangles * 3 vertices)
+    GLint indices[] = {
+        // Front face
+        0, 1, 2, 1, 3, 2,
+        // Back face
+        4, 5, 6, 5, 7, 6,
+        // Left face
+        4, 0, 6, 0, 2, 6,
+        // Right face
+        1, 5, 3, 5, 7, 3,
+        // Top face
+        4, 5, 0, 5, 1, 0,
+        // Bottom face
+        2, 3, 6, 3, 7, 6};
+
     Color colors[] = {
-        {1.0f, 0.5f, 0.12f, 1.0f}, // Top-left
-        {0.2f, 0.8f, 0.3f, 1.0f},  // Top-right
-        {0.3f, 0.4f, 0.9f, 1.0f},  // Bottom-left
-        {0.9f, 0.1f, 0.5f, 1.0f}   // Bottom-right
+        {1.0f, 0.0f, 0.0f, 1.0f}, // 0: Red
+        {0.0f, 1.0f, 0.0f, 1.0f}, // 1: Green
+        {0.0f, 0.0f, 1.0f, 1.0f}, // 2: Blue
+        {1.0f, 1.0f, 0.0f, 1.0f}, // 3: Yellow
+        {1.0f, 0.0f, 1.0f, 1.0f}, // 4: Magenta
+        {0.0f, 1.0f, 1.0f, 1.0f}, // 5: Cyan
+        {1.0f, 0.5f, 0.0f, 1.0f}, // 6: Orange
+        {0.5f, 0.0f, 1.0f, 1.0f}  // 7: Purple
     };
+
     Position pointer[] = {
-        {-0.5f, 0.5f, 0.0f},  // Top-left
-        {0.5f, 0.5f, 0.0f},   // Top-right
-        {-0.5f, -0.5f, 0.0f}, // Bottom-left
-        {0.5f, -0.5f, 0.0f}   // Bottom-right
+        // Front face
+        {-0.5f, 0.5f, 0.5f},  // 0: Top-left-front
+        {0.5f, 0.5f, 0.5f},   // 1: Top-right-front
+        {-0.5f, -0.5f, 0.5f}, // 2: Bottom-left-front
+        {0.5f, -0.5f, 0.5f},  // 3: Bottom-right-front
+        // Back face
+        {-0.5f, 0.5f, -0.5f},  // 4: Top-left-back
+        {0.5f, 0.5f, -0.5f},   // 5: Top-right-back
+        {-0.5f, -0.5f, -0.5f}, // 6: Bottom-left-back
+        {0.5f, -0.5f, -0.5f}   // 7: Bottom-right-back
     };
+
     UV uv[] = {
-        {0.0f, 1.0f}, // Top-left
-        {1.0f, 1.0f}, // Top-right
-        {0.0f, 0.0f}, // Bottom-left
-        {1.0f, 0.0f}  // Bottom-right
+        {0.0f, 1.0f}, // 0
+        {1.0f, 1.0f}, // 1
+        {0.0f, 0.0f}, // 2
+        {1.0f, 0.0f}, // 3
+        {0.0f, 1.0f}, // 4
+        {1.0f, 1.0f}, // 5
+        {0.0f, 0.0f}, // 6
+        {1.0f, 0.0f}  // 7
     };
 
     switch (msg)
@@ -63,22 +97,34 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+        glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
 
         texture = new Texture("./texture/wood.jpg");
 
-        mesh = new Mesh(pointer, 4, indices, 6);
-        mesh->setupColors(colors, 4);
-        mesh->setupUV(uv, 4);
+        mesh = new Mesh(pointer, 8, indices, 36);
+        mesh->setupColors(colors, 8);
+        mesh->setupUV(uv, 8);
 
         shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
         shader->useProgram();
         glSamplerLocation = glGetUniformLocation(shader->ShaderProgram, "textureSampler");
         glUniform1i(glSamplerLocation, 0);
         texture->Bind();
+
+        SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL); // Start 60fps timer
+        break;
+    }
+    case WM_TIMER:
+    {
+        if (wParam == TIMER_ID)
+        {
+            InvalidateRect(hWnd, NULL, FALSE); // Trigger WM_PAINT
+        }
         break;
     }
     case WM_PAINT:
     {
+        time += 0.010f; // Advance time by ~1/60s per frame
         PAINTSTRUCT ps;
         BeginPaint(hWnd, &ps);
 
@@ -88,6 +134,16 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             shader->useProgram();
         if (mesh)
             mesh->draw();
+
+        int timeSampler = glGetUniformLocation(shader->ShaderProgram, "time");
+        if (timeSampler == -1)
+        {
+            logger.error("Warning: uniform 'time' not found!\n");
+        }
+        else
+        {
+            glUniform1f(timeSampler, time);
+        }
 
         SwapBuffers(hdc);
         EndPaint(hWnd, &ps);
@@ -102,6 +158,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_CLOSE:
+        KillTimer(hWnd, TIMER_ID); // Stop timer
         ReleaseDC(hWnd, hdc);
         DestroyWindow(hWnd);
         return 0;
@@ -110,7 +167,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         wglDeleteContext(RenderingContext);
         delete mesh;
         delete shader;
-
+        delete texture;
         PostQuitMessage(0);
         return 0;
     }

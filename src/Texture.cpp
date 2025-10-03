@@ -25,9 +25,6 @@ Texture::Texture(const char *path)
     else
         logger.success("Image of width: %d and height %d loaded", width, height);
 
-    // logger.info("Activating and binding texture object %u", TextureObj);
-    // glActiveTexture(GL_TEXTURE0);
-
     logger.info("Generating OpenGL texture object");
     glGenTextures(1, &TextureObj);
 
@@ -59,9 +56,6 @@ Texture::Texture(const char *path)
 
     logger.info("Uploading texture data to GPU");
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, srcFormat, GL_UNSIGNED_BYTE, img);
-
-    // logger.info("Generating mipmaps");
-    // glGenerateMipmap(GL_TEXTURE_2D);
 
     logger.info("Unbinding texture");
     glBindTexture(GL_TEXTURE_2D, 0);

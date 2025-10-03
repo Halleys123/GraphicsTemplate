@@ -9,5 +9,5 @@ uniform sampler2D textureSampler;
 
 void main()
 {
-    color = texture2D(textureSampler, UV);
+    color = texture2D(textureSampler, UV) * VertColor;
 }

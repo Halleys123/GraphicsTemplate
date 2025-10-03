@@ -7,8 +7,9 @@ class Shader
 {
 private:
     int ShaderID;
-    GLuint VertShaderID, FragShaderID;
-    // GLuint VertShaderID, FragShaderID, ShaderProgram;
+
+    GLuint VertShaderID, FragShaderID, ShaderProgram;
+
     static Logger logger;
     static int ShaderCount;
 
@@ -24,7 +25,6 @@ private:
     void changeLoggerName();
 
 public:
-    GLuint ShaderProgram;
     Shader();
     ~Shader();
     Shader(const char *VertexShaderPath, const char *FragShaderPath);
@@ -34,4 +34,5 @@ public:
     void SetupShader(const char *VertexShaderPath, const char *FragShaderPath);
 
     void useProgram();
+    GLint getUniformLocation(const char *);
 };

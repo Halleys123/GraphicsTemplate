@@ -48,18 +48,19 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {1.0f, 0.5f, 0.0f, 1.0f}, // 6: Orange
         {0.5f, 0.0f, 1.0f, 1.0f}  // 7: Purple
     };
-
+    // Cube centered at (1, 1, 1) with size (width=2, height=3, depth=2)
+    // So, half extents: x ±1, y ±1.5, z ±1
     Position pointer[] = {
-        // Front face
-        {-0.5f, 0.5f, 0.5f},  // 0: Top-left-front
-        {0.5f, 0.5f, 0.5f},   // 1: Top-right-front
-        {-0.5f, -0.5f, 0.5f}, // 2: Bottom-left-front
-        {0.5f, -0.5f, 0.5f},  // 3: Bottom-right-front
-        // Back face
-        {-0.5f, 0.5f, -0.5f},  // 4: Top-left-back
-        {0.5f, 0.5f, -0.5f},   // 5: Top-right-back
-        {-0.5f, -0.5f, -0.5f}, // 6: Bottom-left-back
-        {0.5f, -0.5f, -0.5f}   // 7: Bottom-right-back
+        // Front face (z = 11)
+        {-1.0f, 1.0f, 5.0f},  // 0: Top-left-front
+        {1.0f, 1.0f, 5.0f},   // 1: Top-right-front
+        {-1.0f, -1.0f, 5.0f}, // 2: Bottom-left-front
+        {1.0f, -1.0f, 5.0f},  // 3: Bottom-right-front
+        // Back face (z = 9)
+        {-1.0f, 1.0f, 2.0f},  // 4: Top-left-back
+        {1.0f, 1.0f, 2.0f},   // 5: Top-right-back
+        {-1.0f, -1.0f, 2.0f}, // 6: Bottom-left-back
+        {1.0f, -1.0f, 2.0f}   // 7: Bottom-right-back
     };
 
     UV uv[] = {
@@ -107,8 +108,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
         shader->useProgram();
-        glSamplerLocation = glGetUniformLocation(shader->ShaderProgram, "textureSampler");
-        glUniform1i(glSamplerLocation, 0);
+        glUniform1i(shader->getUniformLocation("textureSampler"), 0);
+
         texture->Bind();
 
         SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL); // Start 60fps timer
@@ -135,7 +136,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (mesh)
             mesh->draw();
 
-        int timeSampler = glGetUniformLocation(shader->ShaderProgram, "time");
+        int timeSampler = shader->getUniformLocation("time");
         if (timeSampler == -1)
         {
             logger.error("Warning: uniform 'time' not found!\n");
@@ -153,6 +154,10 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         int width = LOWORD(lParam);
         int height = HIWORD(lParam);
+
+        glUniform1f(shader->getUniformLocation("resolutionX"), static_cast<float>(width));
+        glUniform1f(shader->getUniformLocation("resolutionY"), static_cast<float>(height));
+
         if (width > 0 && height > 0)
             glViewport(0, 0, width, height);
         break;

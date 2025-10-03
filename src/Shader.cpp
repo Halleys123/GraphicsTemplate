@@ -250,3 +250,8 @@ void Shader::changeLoggerName()
 
     logger.setLoggerName(name);
 }
+
+GLint Shader::getUniformLocation(const char *name)
+{
+    return glGetUniformLocation(this->ShaderProgram, name);
+}

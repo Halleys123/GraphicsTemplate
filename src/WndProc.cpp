@@ -20,6 +20,9 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static Mesh *mesh = nullptr;
     static Texture *texture;
 
+    static Shader *NewShader = nullptr;
+    static Mesh *NewMesh = nullptr;
+
     static int glSamplerLocation;
     static float time = 0.0f;
 
@@ -74,6 +77,15 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {1.0f, 0.0f}  // 7
     };
 
+    Position newPointer[] = {
+        {-1.0f, 1.0f, 0.0f},  // top left
+        {-1.0f, -1.0f, 0.0f}, // bottom left
+        {1.0f, 1.0f, 0.0f},   // top right
+        {1.0f, -1.0f, 0.0f}   // bottom right
+    };
+    GLint newIndex[] = {
+        0, 1, 2, 1, 2, 3};
+
     switch (msg)
     {
     case WM_CREATE:
@@ -106,11 +118,15 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         mesh->setupColors(colors, 8);
         mesh->setupUV(uv, 8);
 
-        shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
-        shader->useProgram();
+        NewMesh = new Mesh(newPointer, 4, newIndex, 6);
+        NewShader = new Shader("./shader/rayMarch.vert", "./shader/rayMarch.frag");
+        NewShader->useProgram();
+
+        // shader = new Shader("./shader/vertex.vert", "./shader/fragment.frag");
+        // shader->useProgram();
         glUniform1i(shader->getUniformLocation("textureSampler"), 0);
 
-        texture->Bind();
+        // texture->Bind();
 
         SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL); // Start 60fps timer
         break;

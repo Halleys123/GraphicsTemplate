@@ -13,6 +13,9 @@
 
 LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static float cameraX = 1.0f;
+    static float cameraZ = 1.0f;
+
     static HDC hdc;
     static HGLRC RenderingContext;
 
@@ -20,42 +23,39 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     static Renderable *cube = nullptr;
 
-    static Shader *NewShader = nullptr;
-    static Mesh *NewMesh = nullptr;
-
     static float time = 0.0f;
 
     Position cubeVertices[] = {
         // Front face
-        {1.0f, 4.0f, -2.0f}, // 0
-        {4.0f, 4.0f, -2.0f}, // 1
-        {1.0f, 1.0f, -2.0f}, // 2
-        {4.0f, 1.0f, -2.0f}, // 3
+        {-1.0f, 1.0f, 1.0f},  // 0
+        {1.0f, 1.0f, 1.0f},   // 1
+        {-1.0f, -1.0f, 1.0f}, // 2
+        {1.0f, -1.0f, 1.0f},  // 3
         // Back face
-        {1.0f, 4.0f, -6.0f}, // 4
-        {4.0f, 4.0f, -6.0f}, // 5
-        {1.0f, 1.0f, -6.0f}, // 6
-        {4.0f, 1.0f, -6.0f}, // 7
+        {-1.0f, 1.0f, -1.0f},  // 4
+        {1.0f, 1.0f, -1.0f},   // 5
+        {-1.0f, -1.0f, -1.0f}, // 6
+        {1.0f, -1.0f, -1.0f},  // 7
         // Left face
-        {1.0f, 4.0f, -6.0f}, // 8
-        {1.0f, 4.0f, -2.0f}, // 9
-        {1.0f, 1.0f, -6.0f}, // 10
-        {1.0f, 1.0f, -2.0f}, // 11
+        {-1.0f, 1.0f, -1.0f},  // 8
+        {-1.0f, 1.0f, 1.0f},   // 9
+        {-1.0f, -1.0f, -1.0f}, // 10
+        {-1.0f, -1.0f, 1.0f},  // 11
         // Right face
-        {4.0f, 4.0f, -2.0f}, // 12
-        {4.0f, 4.0f, -6.0f}, // 13
-        {4.0f, 1.0f, -2.0f}, // 14
-        {4.0f, 1.0f, -6.0f}, // 15
+        {1.0f, 1.0f, 1.0f},   // 12
+        {1.0f, 1.0f, -1.0f},  // 13
+        {1.0f, -1.0f, 1.0f},  // 14
+        {1.0f, -1.0f, -1.0f}, // 15
         // Top face
-        {1.0f, 4.0f, -6.0f}, // 16
-        {4.0f, 4.0f, -6.0f}, // 17
-        {1.0f, 4.0f, -2.0f}, // 18
-        {4.0f, 4.0f, -2.0f}, // 19
+        {-1.0f, 1.0f, -1.0f}, // 16
+        {1.0f, 1.0f, -1.0f},  // 17
+        {-1.0f, 1.0f, 1.0f},  // 18
+        {1.0f, 1.0f, 1.0f},   // 19
         // Bottom face
-        {1.0f, 1.0f, -2.0f}, // 20
-        {4.0f, 1.0f, -2.0f}, // 21
-        {1.0f, 1.0f, -6.0f}, // 22
-        {4.0f, 1.0f, -6.0f}  // 23
+        {-1.0f, -1.0f, 1.0f},  // 20
+        {1.0f, -1.0f, 1.0f},   // 21
+        {-1.0f, -1.0f, -1.0f}, // 22
+        {1.0f, -1.0f, -1.0f}   // 23
     };
 
     UV cubeUVs[] = {
@@ -138,7 +138,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
 
         cube = new Renderable(count, cubeVertices, cubeIndices, cubeColors, cubeUVs, "./shader/vertex.vert", "./shader/fragment.frag", "./texture/wood.jpg");
-
+        cube->SetUniform<float>("cameraX", cameraX);
+        cube->SetUniform<float>("cameraZ", cameraZ);
         SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL);
         break;
     }
@@ -150,6 +151,39 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
+
+    case WM_KEYDOWN:
+    {
+        if (wParam == VK_LEFT)
+        {
+            cameraX -= 0.15f;
+            cube->SetUniform<float>("cameraX", cameraX);
+        }
+        else if (wParam == VK_RIGHT)
+        {
+            cameraX += 0.15f;
+            cube->SetUniform<float>("cameraX", cameraX);
+        }
+        else if (wParam == VK_UP)
+        {
+            cameraZ += 0.15f;
+            cube->SetUniform<float>("cameraZ", cameraZ);
+        }
+        else if (wParam == VK_DOWN)
+        {
+            cameraZ -= 0.15f;
+            cube->SetUniform<float>("cameraZ", cameraZ);
+        }
+        else if (wParam == VK_HOME)
+        {
+            cameraX = 0.0f;
+            cameraZ = 0.0f;
+            cube->SetUniform<float>("cameraX", cameraX);
+            cube->SetUniform<float>("cameraZ", cameraZ);
+        }
+        return 0;
+    }
+
     case WM_PAINT:
     {
         time += 0.010f;
@@ -188,8 +222,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
     {
         wglDeleteContext(RenderingContext);
-        delete NewShader;
-        delete NewMesh;
         delete cube;
         PostQuitMessage(0);
         return 0;

@@ -14,39 +14,23 @@ out vec2 UV;
 out vec3 Normal;
 
 void main()
-{    
-    float a = resolutionX / resolutionY;
-    float fov = 120.0;
-    float f = 1.0 / tan(radians(fov / 2.0));
+{
+    float aspect = resolutionX / max(resolutionY, 1.0);
+    float fov = radians(120.0);
+    float f = 1.0 / tan(fov * 0.5);
+    float nearP = 0.1;
+    float farP = 200.0;
 
-    float near = 0.2;
-    float far = 100.0;
-
-    float lambda = (far) / (far - near);
-    mat4 perspectiveMatrix = mat4(
-        f / a, 0.0, 0.0, 0.0,
+    // Standard OpenGL RH perspective matrix (column major)
+    mat4 P = mat4(
+        f / aspect, 0.0, 0.0, 0.0,
         0.0, f, 0.0, 0.0,
-        0.0, 0.0, lambda, 1.0,
-        0.0, 0.0, -lambda * near, 0.0
+        0.0, 0.0, (farP + nearP) / (nearP - farP), -1.0,
+        0.0, 0.0, (2.0 * farP * nearP) / (nearP - farP), 0.0
     );
 
-    // mat4 translateMatrix = mat4(
-    //     1.0, 0.0, 0.0, 0.0,
-    //     0.0, 1.0, 0.0, 0.0,
-    //     0.0, 0.0, 1.0, 0.0,
-    //     sin(time) * 0.5, cos(time) * 0.5, 0.0, 1.0
-    // );
-
-    mat4 rotationOnZAxis = mat4(
-        cos(time), -sin(time), 0.0, 0.0,
-        sin(time), cos(time), 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    );
-
-    mat4 combinedRotation = rotationOnZAxis;
-
-    gl_Position =  perspectiveMatrix * combinedRotation * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    // gl_Position = vec4(aPos, 1.0);
+    gl_Position = P * vec4(aPos, 1.0);
     VertColor = aColor;
     UV = aUV;
     Normal = aNormal;

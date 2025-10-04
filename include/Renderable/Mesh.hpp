@@ -35,6 +35,8 @@ private:
     Position *vertCoords = nullptr;
     Color *colors = nullptr;
 
+    bool logWhileDrawDone = true;
+
 private:
     void changeLoggerName();
 

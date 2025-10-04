@@ -8,8 +8,6 @@ Logger Mesh::logger = Logger();
 
 Mesh::Mesh(Position *vertCoords, int vertexCount, GLint *indices, int indexCount)
 {
-    glGenVertexArrays(1, &VAO);
-
     MeshID = ++MeshCount;
     changeLoggerName();
 
@@ -174,22 +172,30 @@ void Mesh::setupUV(UV *uvs, int uvCount)
 
 void Mesh::draw()
 {
-    if (this->vertexCount <= 0)
+    if (this->vertexCount <= 0 && logWhileDrawDone)
     {
         logger.error("Vertex Coordinates not found");
         return;
     }
 
+    if (logWhileDrawDone)
+        logger.log("VAO Value: %d", VAO);
+
     glBindVertexArray(VAO);
 
     if (this->indexCount > 0 && indices)
     {
+        if (logWhileDrawDone)
+            logger.log("Drawing with Element buffer");
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     }
     else
     {
+        if (logWhileDrawDone)
+            logger.log("Drawing with arrays");
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     }
 
+    logWhileDrawDone = false;
     glBindVertexArray(0);
 }

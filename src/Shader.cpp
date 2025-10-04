@@ -117,9 +117,13 @@ void Shader::loadFromFile(char **shaderSrc, unsigned int &fileLength, const char
 
     Shader::logger.success("Shader Source file loaded successfully: %s", path);
 
-    Shader::logger.silly("\n%s", *shaderSrc);
+    // Shader::logger.log("\n%s", *shaderSrc);
 
     fclose(file);
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+        logger.error("GL error after shader compilation: %x", err);
 }
 
 void Shader::compileShader(char *shaderSrc, GLenum ShaderType)
@@ -183,7 +187,7 @@ void Shader::linkShaderProgram()
     glAttachShader(ShaderProgram, VertShaderID);
     glAttachShader(ShaderProgram, FragShaderID);
     glLinkProgram(ShaderProgram);
-    // Detach & delete shaders after a successful link attempt regardless of outcome.
+
     glDetachShader(ShaderProgram, VertShaderID);
     glDetachShader(ShaderProgram, FragShaderID);
     deleteShader(VertShaderID);
@@ -224,13 +228,14 @@ void Shader::deleteShader(GLuint Shader)
     changeLoggerName();
     if ((int)Shader <= 0) // Guard against invalid / already deleted IDs (we store -1 on failure)
         return;
-    glDeleteShader(Shader);
 
     int status;
     GLint ShaderType;
 
     glGetShaderiv(Shader, GL_DELETE_STATUS, &status);
     glGetShaderiv(Shader, GL_SHADER_TYPE, &ShaderType);
+
+    glDeleteShader(Shader);
 
     if (status == GL_TRUE)
         logger.info("%s shader has been erased", ShaderType == GL_VERTEX_SHADER ? "Vertex Shader" : "Fragment Shader");

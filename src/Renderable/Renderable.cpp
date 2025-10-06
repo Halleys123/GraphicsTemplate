@@ -24,14 +24,9 @@ Renderable::Renderable(GLint *count, Position *positions, GLint *indices, Color 
     mesh->setupUV(uvs, count[3]);
 }
 Renderable::Renderable(GLint *count, Position *positions, GLint *indices, Color *colors, UV *uvs, Normal *normals)
+    : Renderable(count, positions, indices, colors, uvs)
 {
-    // Normals not yet supported, but still setup mesh, colors, uvs.
-    logger.warn("Normals parameter provided but Mesh normal support not implemented yet");
-    mesh = new Mesh(positions, count[0], indices, count[1]);
-    if (colors && count[2] > 0)
-        mesh->setupColors(colors, count[2]);
-    if (uvs && count[3] > 0)
-        mesh->setupUV(uvs, count[3]);
+    mesh->setupNormals(normals, count[4]);
 }
 
 // With shaders

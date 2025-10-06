@@ -110,6 +110,7 @@ void Mesh::setupColors(Color *colors, int colorCount)
         return;
     }
 
+    logger.info("Setting up colors");
     this->colorCount = colorCount;
     this->colors = (Color *)malloc(sizeof(Color) * this->colorCount);
 
@@ -121,6 +122,7 @@ void Mesh::setupColors(Color *colors, int colorCount)
 
     // Copy the input colors to our allocated memory
     memcpy(this->colors, colors, sizeof(Color) * this->colorCount);
+    logger.info("Copied colors to memory");
 
     glBindVertexArray(VAO);
 
@@ -132,6 +134,15 @@ void Mesh::setupColors(Color *colors, int colorCount)
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Color), (void *)0);
     glEnableVertexAttribArray(1);
 
+    if (glGetError() != GL_NO_ERROR)
+    {
+        logger.error("OpenGL error after color buffer setup");
+    }
+    else
+    {
+        logger.success("Colors setup completed successfully");
+    }
+
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -140,10 +151,11 @@ void Mesh::setupUV(UV *uvs, int uvCount)
 {
     if (!uvs || uvCount <= 0)
     {
-        logger.error("Either color pointer or color count is zero");
+        logger.error("Either UV pointer or UV count is zero");
         return;
     }
 
+    logger.info("Setting up UVs");
     this->uvCount = uvCount;
     this->uvs = (UV *)malloc(sizeof(UV) * this->uvCount);
 
@@ -155,6 +167,7 @@ void Mesh::setupUV(UV *uvs, int uvCount)
 
     // Copy the input UVs to our allocated memory
     memcpy(this->uvs, uvs, sizeof(UV) * this->uvCount);
+    logger.info("Copied UVs to memory");
 
     glBindVertexArray(VAO);
 
@@ -165,6 +178,60 @@ void Mesh::setupUV(UV *uvs, int uvCount)
     // 2 components per UV: u, v
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(UV), (void *)0);
     glEnableVertexAttribArray(2);
+
+    if (glGetError() != GL_NO_ERROR)
+    {
+        logger.error("OpenGL error after UV buffer setup");
+    }
+    else
+    {
+        logger.success("UVs setup completed successfully");
+    }
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Mesh::setupNormals(Normal *normals, int normalCount)
+{
+    logger.info("Setup normals has started");
+    if (!normals || normalCount <= 0)
+    {
+        logger.error("Either normal pointer or normal count is zero");
+        return;
+    }
+
+    logger.info("Setting up normals");
+    this->normalCount = normalCount;
+    this->normals = (Normal *)malloc(sizeof(Normal) * this->normalCount);
+
+    if (!this->normals)
+    {
+        logger.fatal("Normals array allocation failed");
+        return;
+    }
+
+    memcpy(this->normals, normals, sizeof(Normal) * this->normalCount);
+    logger.info("Copied normals to memory");
+
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO[VBO_INDEX::NORMAL]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[VBO_INDEX::NORMAL]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Normal) * this->normalCount, this->normals, GL_STATIC_DRAW);
+
+    // 3 components per Normal: x, y, z
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Normal), (void *)0);
+    glEnableVertexAttribArray(3);
+
+    if (glGetError() != GL_NO_ERROR)
+    {
+        logger.error("OpenGL error after normal buffer setup");
+    }
+    else
+    {
+        logger.success("Normals setup completed successfully");
+    }
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

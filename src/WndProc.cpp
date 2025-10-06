@@ -16,6 +16,13 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static float cameraX = 1.0f;
     static float cameraZ = 1.0f;
 
+    static int mouseX = 0.0f;
+    static int mouseY = 0.0f;
+
+    static float cameraTargetX = 0.0f;
+    static float cameraTargetY = 0.0f;
+    static float cameraTargetZ = 0.0f;
+
     static HDC hdc;
     static HGLRC RenderingContext;
 
@@ -56,6 +63,39 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {1.0f, -1.0f, 1.0f},   // 21
         {-1.0f, -1.0f, -1.0f}, // 22
         {1.0f, -1.0f, -1.0f}   // 23
+    };
+
+    Normal cubeNormals[] = {
+        // Front face (pointing towards +Z)
+        {0.0f, 0.0f, 1.0f}, // 0
+        {0.0f, 0.0f, 1.0f}, // 1
+        {0.0f, 0.0f, 1.0f}, // 2
+        {0.0f, 0.0f, 1.0f}, // 3
+        // Back face (pointing towards -Z)
+        {0.0f, 0.0f, -1.0f}, // 4
+        {0.0f, 0.0f, -1.0f}, // 5
+        {0.0f, 0.0f, -1.0f}, // 6
+        {0.0f, 0.0f, -1.0f}, // 7
+        // Left face (pointing towards -X)
+        {-1.0f, 0.0f, 0.0f}, // 8
+        {-1.0f, 0.0f, 0.0f}, // 9
+        {-1.0f, 0.0f, 0.0f}, // 10
+        {-1.0f, 0.0f, 0.0f}, // 11
+        // Right face (pointing towards +X)
+        {1.0f, 0.0f, 0.0f}, // 12
+        {1.0f, 0.0f, 0.0f}, // 13
+        {1.0f, 0.0f, 0.0f}, // 14
+        {1.0f, 0.0f, 0.0f}, // 15
+        // Top face (pointing towards +Y)
+        {0.0f, 1.0f, 0.0f}, // 16
+        {0.0f, 1.0f, 0.0f}, // 17
+        {0.0f, 1.0f, 0.0f}, // 18
+        {0.0f, 1.0f, 0.0f}, // 19
+        // Bottom face (pointing towards -Y)
+        {0.0f, -1.0f, 0.0f}, // 20
+        {0.0f, -1.0f, 0.0f}, // 21
+        {0.0f, -1.0f, 0.0f}, // 22
+        {0.0f, -1.0f, 0.0f}  // 23
     };
 
     UV cubeUVs[] = {
@@ -109,7 +149,7 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     for (int i = 0; i < 24; ++i)
         cubeColors[i] = {0.5f, 0.5f, 0.5f, 1.0f};
 
-    GLint count[] = {24, 36, 24, 24, 0};
+    GLint count[] = {24, 36, 24, 24, 24};
 
     switch (msg)
     {
@@ -137,10 +177,13 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
 
-        cube = new Renderable(count, cubeVertices, cubeIndices, cubeColors, cubeUVs, "./shader/vertex.vert", "./shader/fragment.frag", "./texture/wood.jpg");
+        cube = new Renderable(count, cubeVertices, cubeIndices, cubeColors, cubeUVs, cubeNormals, "./shader/vertex.vert", "./shader/fragment.frag", "./texture/wood.jpg");
         cube->SetUniform<float>("cameraX", cameraX);
         cube->SetUniform<float>("cameraZ", cameraZ);
+        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
+
         SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL);
+
         break;
     }
     case WM_TIMER:
@@ -150,6 +193,47 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hWnd, NULL, FALSE);
         }
         break;
+    }
+
+    case WM_LBUTTONDOWN:
+    {
+        mouseX = LOWORD(lParam);
+        mouseY = HIWORD(lParam);
+        return 0;
+    }
+
+    case WM_LBUTTONUP:
+    {
+        mouseX = 0.0f;
+        mouseY = 0.0f;
+        return 0;
+    }
+
+    case WM_MOUSEMOVE:
+    {
+        if (!mouseX && !mouseY)
+            return 0;
+
+        int newMouseX = LOWORD(lParam);
+        int newMouseY = HIWORD(lParam);
+
+        RECT rc;
+        GetClientRect(hWnd, &rc);
+        float resolutionX = static_cast<float>(rc.right - rc.left);
+        float resolutionY = static_cast<float>(rc.bottom - rc.top);
+
+        float percentChangeX = (resolutionX != 0.0f) ? static_cast<float>(newMouseX - mouseX) / resolutionX : 0.0f;
+        float percentChangeY = (resolutionY != 0.0f) ? static_cast<float>(newMouseY - mouseY) / resolutionY : 0.0f;
+
+        mouseX = newMouseX;
+        mouseY = newMouseY;
+
+        cameraTargetX += -percentChangeX * 2.0f;
+        cameraTargetZ += percentChangeY * 2.0f;
+
+        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
+
+        return 0;
     }
 
     case WM_KEYDOWN:

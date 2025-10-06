@@ -51,5 +51,6 @@ public:
     void setupPositions(Position *positions, int positionCount, GLint *indices = nullptr, int indexCount = 0);
     void setupColors(Color *colors, int colorCount);
     void setupUV(UV *uv, int count);
+    void setupNormals(Normal *normals, int count);
     void draw();
 };

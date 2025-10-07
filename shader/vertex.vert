@@ -17,11 +17,11 @@ uniform float cameraZ;
 out vec4 VertColor;
 out vec2 UV;
 out vec3 Normal;
+out vec3 fragPos;
 
 void main()
 {
-    vec3 lightDir = normalize(vec3(0.5, -1.0, 0.3)); // Light direction
-    
+ 
     vec3 cameraPos = vec3(cameraX, 5.0, cameraZ);
     vec3 targetPos = vec3(camLookAt.xyz);
     vec3 up = vec3(0.0, 1.0, 0.0);
@@ -57,13 +57,9 @@ void main()
 
     gl_Position = P * V * vec4(aPos, 1.0);
     
-    // Calculate lighting
-    float lightIntensity = max(dot(normalize(aNormal), -lightDir), 0.0);
-    lightIntensity = lightIntensity * 0.8 + 0.2; // Add ambient light
-    
-    vec3 lightColor = vec3(1.0, 0.0, 0.0);
 
-    VertColor = vec4(aColor.rgb * lightIntensity * lightColor, aColor.a);
+    VertColor = vec4(aColor.rgb, 1.0);
     UV = aUV;
     Normal = aNormal;
+    fragPos = aPos;
 }

@@ -231,8 +231,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         cameraTargetX += -percentChangeX * 2.0f;
         cameraTargetZ += percentChangeY * 2.0f;
 
-        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
-
         return 0;
     }
 
@@ -241,21 +239,25 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (wParam == VK_LEFT)
         {
             cameraX -= 0.15f;
+            cameraTargetX -= 0.15f;
             cube->SetUniform<float>("cameraX", cameraX);
         }
         else if (wParam == VK_RIGHT)
         {
             cameraX += 0.15f;
+            cameraTargetX += 0.15f;
             cube->SetUniform<float>("cameraX", cameraX);
         }
         else if (wParam == VK_UP)
         {
-            cameraZ += 0.15f;
+            cameraZ -= 0.15f;
+            cameraTargetZ -= 0.15f;
             cube->SetUniform<float>("cameraZ", cameraZ);
         }
         else if (wParam == VK_DOWN)
         {
-            cameraZ -= 0.15f;
+            cameraZ += 0.15f;
+            cameraTargetZ += 0.15f;
             cube->SetUniform<float>("cameraZ", cameraZ);
         }
         else if (wParam == VK_HOME)
@@ -265,6 +267,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             cube->SetUniform<float>("cameraX", cameraX);
             cube->SetUniform<float>("cameraZ", cameraZ);
         }
+        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
+
         return 0;
     }
 

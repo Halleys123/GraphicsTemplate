@@ -7,21 +7,15 @@
 #include "Vertex.hpp"
 #include "Texture.hpp"
 #include "Renderable.hpp"
+#include "Matrix.hpp"
 
 #define TIMER_ID 1
 #define FRAME_INTERVAL_MS 10 // ~60 FPS
 
 LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static float cameraX = 1.0f;
-    static float cameraZ = 1.0f;
-
     static int mouseX = 0.0f;
     static int mouseY = 0.0f;
-
-    static float cameraTargetX = 0.0f;
-    static float cameraTargetY = 0.0f;
-    static float cameraTargetZ = 0.0f;
 
     static HDC hdc;
     static HGLRC RenderingContext;
@@ -64,7 +58,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {-1.0f, -1.0f, -1.0f}, // 22
         {1.0f, -1.0f, -1.0f}   // 23
     };
-
     Normal cubeNormals[] = {
         // Front face (pointing towards +Z)
         {0.0f, 0.0f, 1.0f}, // 0
@@ -97,7 +90,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {0.0f, -1.0f, 0.0f}, // 22
         {0.0f, -1.0f, 0.0f}  // 23
     };
-
     UV cubeUVs[] = {
         // Front face
         {0.0f, 1.0f}, // 0
@@ -130,7 +122,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {0.0f, 0.0f}, // 22
         {1.0f, 0.0f}  // 23
     };
-
     GLint cubeIndices[] = {
         // Front face
         0, 1, 2, 1, 3, 2,
@@ -144,6 +135,9 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         16, 17, 18, 17, 19, 18,
         // Bottom face
         20, 21, 22, 21, 23, 22};
+
+    static Matrix<float> mat;
+    static Matrix<float> projection;
 
     Color cubeColors[24];
     for (int i = 0; i < 24; ++i)
@@ -174,14 +168,26 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         GetClientRect(hWnd, &rc);
         glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
 
+        mat[0][0] = 0.86602f;
+        mat[0][1] = 0.5f;
+        mat[0][3] = 1.0f;
+
+        mat[1][0] = -0.5f;
+        mat[1][1] = 0.86602f;
+        mat[1][3] = 1.0f;
+
+        mat[2][2] = 1.0f;
+        mat[2][3] = -3.0f; // Move cube back in Z
+
+        mat[3][3] = 1.0f;
+
+        projection = Matrix<float>::perspective(50.0f, 1.6f, 1.0f, 100.0f);
+        mat = mat.transpose();
+
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
+        glEnable(GL_DEPTH_TEST);
 
         cube = new Renderable(count, cubeVertices, cubeIndices, cubeColors, cubeUVs, cubeNormals, "./shader/vertex.vert", "./shader/fragment.frag", "./texture/wood.jpg");
-        cube->SetUniform<float>("cameraX", cameraX);
-        cube->SetUniform<float>("cameraZ", cameraZ);
-        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
-
         SetTimer(hWnd, TIMER_ID, FRAME_INTERVAL_MS, NULL);
 
         break;
@@ -209,69 +215,6 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         return 0;
     }
 
-    case WM_MOUSEMOVE:
-    {
-        if (!mouseX && !mouseY)
-            return 0;
-
-        int newMouseX = LOWORD(lParam);
-        int newMouseY = HIWORD(lParam);
-
-        RECT rc;
-        GetClientRect(hWnd, &rc);
-        float resolutionX = static_cast<float>(rc.right - rc.left);
-        float resolutionY = static_cast<float>(rc.bottom - rc.top);
-
-        float percentChangeX = (resolutionX != 0.0f) ? static_cast<float>(newMouseX - mouseX) / resolutionX : 0.0f;
-        float percentChangeY = (resolutionY != 0.0f) ? static_cast<float>(newMouseY - mouseY) / resolutionY : 0.0f;
-
-        mouseX = newMouseX;
-        mouseY = newMouseY;
-
-        cameraTargetX += -percentChangeX * 2.0f;
-        cameraTargetZ += percentChangeY * 2.0f;
-
-        return 0;
-    }
-
-    case WM_KEYDOWN:
-    {
-        if (wParam == VK_LEFT)
-        {
-            cameraX -= 0.15f;
-            cameraTargetX -= 0.15f;
-            cube->SetUniform<float>("cameraX", cameraX);
-        }
-        else if (wParam == VK_RIGHT)
-        {
-            cameraX += 0.15f;
-            cameraTargetX += 0.15f;
-            cube->SetUniform<float>("cameraX", cameraX);
-        }
-        else if (wParam == VK_UP)
-        {
-            cameraZ -= 0.15f;
-            cameraTargetZ -= 0.15f;
-            cube->SetUniform<float>("cameraZ", cameraZ);
-        }
-        else if (wParam == VK_DOWN)
-        {
-            cameraZ += 0.15f;
-            cameraTargetZ += 0.15f;
-            cube->SetUniform<float>("cameraZ", cameraZ);
-        }
-        else if (wParam == VK_HOME)
-        {
-            cameraX = 0.0f;
-            cameraZ = 0.0f;
-            cube->SetUniform<float>("cameraX", cameraX);
-            cube->SetUniform<float>("cameraZ", cameraZ);
-        }
-        cube->SetUniform<float>("camLookAt", cameraTargetX, cameraTargetY, cameraTargetZ);
-
-        return 0;
-    }
-
     case WM_PAINT:
     {
         time += 0.010f;
@@ -280,6 +223,8 @@ LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        cube->SetUniform<float>("model", mat.mat);
+        cube->SetUniform<float>("projection", projection.mat);
         cube->SetUniform<float>("time", time);
         cube->Draw();
 

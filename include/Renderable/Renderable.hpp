@@ -57,6 +57,8 @@ public:
     void SetUniform(const char *name, T a, T b, T c);
     template <typename T>
     void SetUniform(const char *name, T a, T b, T c, T d);
+    template <typename T>
+    void SetUniform(const char *name, T mat[4][4]);
 };
 
 template <typename T>
@@ -139,6 +141,29 @@ void Renderable::SetUniform(const char *name, T a, T b, T c, T d)
         glUniform4i(uniformLocation, a, b, c, d);
     else if constexpr (std::is_same_v<T, float>)
         glUniform4f(uniformLocation, a, b, c, d);
+    else
+    {
+        logger.fatal("Invalid type detected in uniform setting");
+        logger.fatal("Shutting down the program");
+        exit(1);
+    }
+}
+
+template <typename T>
+void Renderable::SetUniform(const char *name, T mat[4][4])
+{
+    if (!shader)
+    {
+        logger.error("SetUniform (4 params) called but shader is null");
+        return;
+    }
+    shader->useProgram();
+    GLint uniformLocation = shader->getUniformLocation(name);
+
+    if constexpr (std::is_same_v<T, float>)
+    {
+        glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, &mat[0][0]);
+    }
     else
     {
         logger.fatal("Invalid type detected in uniform setting");
